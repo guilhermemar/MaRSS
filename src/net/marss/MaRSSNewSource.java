@@ -1,15 +1,21 @@
 package net.marss;
 
+import java.util.ArrayList;
+
+import net.marss.database.Manager;
+import net.marss.rss.FeedSource;
 import android.os.Bundle;
 import android.app.Activity;
+import android.util.Log;
 import android.view.Menu;
 
-public class MainActivity extends Activity {
+public class MaRSSNewSource extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.marss_new_source);
+                
     }
 
     @Override
