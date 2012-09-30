@@ -8,11 +8,8 @@ import net.marss.rss.FeedSource;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
@@ -102,7 +99,6 @@ public class Manager extends SQLiteOpenHelper {
 	
 	public boolean update(FeedSource source)
 	{
-		Integer retorno = -1;
 		String  where;
 		
 		SQLiteDatabase db = getWritableDatabase();
@@ -115,10 +111,31 @@ public class Manager extends SQLiteOpenHelper {
 		
 		where = "id_feed_source = " + source.getId_feed_source();
 		
-		retorno = db.update("FEED_SOURCES", values, where, null);
+		db.update("FEED_SOURCES", values, where, null);
 		
 		return true;
 	}
+	
+	public int getTotalUnead (FeedSource source)
+	{	
+		SQLiteDatabase db = getReadableDatabase();
+		Cursor c = db.rawQuery("" +
+			"SELECT " +
+			"	count(*) as total " +
+			"FROM " +
+			"	feed_itens " +
+			"WHERE " +
+			"	id_feed_source = " + source.getId_feed_source() + " " +
+			"	AND control_read = 0",
+			null
+		);
+		
+		c.moveToNext();
+
+		return c.getInt(0);
+		
+	}
+	
 	
 	public boolean delete (FeedSource source) 
 	{
@@ -183,7 +200,6 @@ public class Manager extends SQLiteOpenHelper {
 	
 	public boolean update(FeedItem item)
 	{
-		Integer retorno;
 		String  where;
 		
 		SQLiteDatabase db = getWritableDatabase();
@@ -198,7 +214,7 @@ public class Manager extends SQLiteOpenHelper {
 		
 		where = "id_feed_item = " + item.getId_feed_item();
 		
-		retorno = db.update("FEED_ITENS", values, where, null);
+		db.update("FEED_ITENS", values, where, null);
 		
 		return true;
 	}
@@ -210,6 +226,8 @@ public class Manager extends SQLiteOpenHelper {
 		String where = "id_feed_item = " + item.getId_feed_item();
 		
 		db.delete("FEED_ITENS", where, null);
+		
+		Log.d(">", "Excluído item : " + item.getTitle());
 		
 		return true;
 	}
@@ -240,14 +258,17 @@ public class Manager extends SQLiteOpenHelper {
 		 * Percorrendo itens
 		 */
 		while (c.moveToNext()) {
-			sources.add(new FeedSource(
+			FeedSource atual = new FeedSource(
 				c.getLong(0),
 				c.getString(1),
 				c.getString(2),
 				c.getString(3),
 				c.getString(4),
 				c.getString(5)
-			));
+			);	
+			atual.setTotalUnread(this.getTotalUnead(atual));
+		
+			sources.add(atual);
 		}
 
 		Log.d(">", "retornando feeds encontrados");
@@ -301,6 +322,75 @@ public class Manager extends SQLiteOpenHelper {
 					"	feed_itens " +
 					"WHERE " +
 					"	id_feed_source = " + source.getId_feed_source() + " ",
+					null
+				);
+		}
+		
+
+
+		Log.d(">", "encontrou " + Integer.toString(c.getCount()) + " iten(s)");
+		
+		while (c.moveToNext()) {
+			itens.add(new FeedItem(
+				c.getLong(0),
+				c.getLong(1),
+				c.getString(2),
+				c.getString(3),
+				c.getString(4),
+				c.getString(5),
+				c.getInt(6)
+			));
+		}
+
+		Log.d(">", "retornando feeds encontrados");
+		return itens;
+
+	}
+	
+	public ArrayList<FeedItem> getAllItens()
+	{
+		Log.d(">", "iniciando busca por todos feeds ");
+		
+		ArrayList<FeedItem> itens = new ArrayList<FeedItem>();
+		
+		SQLiteDatabase db = getReadableDatabase();
+		
+		Cursor c;
+		if (MaRSSParameters.hiddenReadeds) {
+			Log.d(">", "Buscar somente não lidos");
+			
+			
+			 c = db.rawQuery("" +
+				"SELECT " +
+				"	id_feed_item, " +
+				"	id_feed_source, " +
+				"	title, " +
+				"	link, " +
+				"	description, " +
+				"	pub_date, " +
+				"	control_read " +
+				"FROM " +
+				"	feed_itens " +
+				"WHERE " +
+				"	control_read = 0 ",
+				null
+			);
+		
+		}
+		else {
+			Log.d(">", "Buscar somente todos");
+			
+			c = db.rawQuery("" +
+					"SELECT " +
+					"	id_feed_item, " +
+					"	id_feed_source, " +
+					"	title, " +
+					"	link, " +
+					"	description, " +
+					"	pub_date, " +
+					"	control_read " +
+					"FROM " +
+					"	feed_itens ",
 					null
 				);
 		}

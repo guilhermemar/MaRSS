@@ -7,19 +7,15 @@ import net.marss.database.Manager;
 import net.marss.rss.FeedSource;
 import android.os.Bundle;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class MaRSSNewSource extends Activity {
 
@@ -33,13 +29,8 @@ public class MaRSSNewSource extends Activity {
          */
         Button   sourceAdd   = (Button)   findViewById(R.id.buttonSourceAdd);
         Button   saveSources = (Button)   findViewById(R.id.buttonSaveSources);
+        Button   cancel      = (Button)   findViewById(R.id.buttonCancel);
         ListView sourceAdded = (ListView) findViewById(R.id.listViewSourceAdded);
-        
-        /*
-		 * para testes
-		 */
-        TextView   sourceUrl = (TextView) findViewById(R.id.textSourceUrl);
-		sourceUrl.setText("http://rss.terra.com.br/0,,EI238,00.xml");
         
         sourceAdded.setAdapter(
         	new ArrayAdapterSourcesAdd(
@@ -71,6 +62,11 @@ public class MaRSSNewSource extends Activity {
 					AndroidTools.toast(getApplicationContext(), "Erro ao carregar o Feed");
 				}
 				
+				/* * * * * * * * * 
+		         *  CHAMADA DO MÉTODO PARA FACILITAR A APRESENTAÇÃO
+		         */
+		        getFeedLink();
+				
 			}
 		});
         
@@ -84,6 +80,11 @@ public class MaRSSNewSource extends Activity {
 				
 				int total = sources.getCount();
 				
+				if (total == 0) {
+					AndroidTools.toast(getApplicationContext(), "Nada para salvar");
+					return;
+				}
+				
 				for (int i=0; i<total; ++i) {
 					sources.getItem(i).save(m);
 					sources.getItem(i).loadItens(m);
@@ -92,7 +93,21 @@ public class MaRSSNewSource extends Activity {
 				finish();
 			}
 		});
-                
+        
+        cancel.setOnClickListener(new OnClickListener() {
+			
+			public void onClick(View v) {
+				finish();
+			}
+		});
+        
+        
+        
+        
+        /* * * * * * * * * 
+         *  CHAMADA DO MÉTODO PARA FACILITAR A APRESENTAÇÃO
+         */
+        this.getFeedLink();
     }
 
     /*
@@ -103,6 +118,7 @@ public class MaRSSNewSource extends Activity {
         //getMenuInflater().inflate(R.menu.activity_main, menu);
         
         menu.add(Menu.NONE, Menu.FIRST + 1, Menu.NONE, "Cancelar");
+        menu.add(Menu.NONE, Menu.FIRST + 2, Menu.NONE, "Sobre");
         
         return super.onCreateOptionsMenu(menu);
     }
@@ -115,8 +131,35 @@ public class MaRSSNewSource extends Activity {
     	case (Menu.FIRST + 1):
     		finish();
     		break;
-    	}
+    		
+    	case (Menu.FIRST + 2) :
+	    	startActivity(new Intent(getApplicationContext(), MaRSSSobre.class));
+			break;
+		}
+    	
     	
     	return super.onOptionsItemSelected(item);
+    }
+    
+    /*
+     * Classe auxiliar apenas para facilitar a apresentação
+     */
+    public void getFeedLink ()
+    {
+    	ArrayList<String> s = new ArrayList<String>();
+    	
+    	s.add("http://www.inovacaotecnologica.com.br/boletim/rss.xml"); 
+    	s.add("http://rss.terra.com.br/0,,EI1,00.xml");
+    	s.add("http://rss.terra.com.br/0,,EI4795,00.xml");
+    	s.add("http://carroonline.terra.com.br/rss.asp"); 
+    	s.add("http://rss.terra.com.br/0,,EI1267,00.xml");
+    	s.add("http://rss.terra.com.br/0,,EI1497,00.xml"); 
+    	s.add("http://www2.portoalegre.rs.gov.br/cs/rss.php");
+    	s.add("http://www.praquempedala.com.br/blog/feed/");
+    	s.add("http://cerejadeneve.com/feed/");
+    	s.add("http://feeds.feedburner.com/tutorial9"); 
+    	
+    	TextView   sourceUrl = (TextView) findViewById(R.id.textSourceUrl);
+ 		sourceUrl.setText(s.get( (int)(Math.random() * (s.size())) ));
     }
 }

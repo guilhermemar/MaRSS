@@ -24,10 +24,15 @@ public class ArrayAdapterSourcesList extends ArrayAdapter<FeedSource> {
 		View v = this.inflater.inflate(R.layout.arrayadapter_sources_list, null);
 		
 		TextView sourceName = (TextView) v.findViewById(R.id.textSourceName);
+		TextView sourceUnreads = (TextView) v.findViewById(R.id.textSourceUnreads);
+		
+		
 		
 		FeedSource source = this.getItem(position);
 		
 		sourceName.setText(source.getTitle());
+		sourceUnreads.setText(source.getTotalUnread().toString());
+		
 
 		return v;	
 	}

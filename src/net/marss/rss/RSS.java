@@ -1,7 +1,6 @@
 package net.marss.rss;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -41,6 +40,8 @@ public class RSS {
 	
 	public static ArrayList<FeedItem> loadItens(FeedSource source) 
 	{
+		Log.d(">", "loadItens Carregando link " + source.getFeed_link());
+		
 		ArrayList<FeedItem> itens = new ArrayList<FeedItem>();
 		NodeList rssItens;
 		
@@ -79,6 +80,7 @@ public class RSS {
 	
 	private static Element getSource(String link)
 	{
+		Log.d(">", "getSource Carregando link " + link);
 		try {
 			Document doc = RSS.getDocument(link);
 			
@@ -108,6 +110,7 @@ public class RSS {
 	
 	private static Document getDocument (String link) throws SAXException, IOException, ParserConfigurationException
 	{
+		Log.d(">", "getDocument Carregando link " + link);
 		URL u = new URL(link);
 		
 		DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();

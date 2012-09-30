@@ -2,12 +2,8 @@ package net.marss.rss;
 
 import java.util.ArrayList;
 
-import net.marss.AndroidTools;
 import net.marss.database.Manager;
 import net.marss.database.ManagerException;
-import android.R.bool;
-import android.content.Context;
-import android.test.IsolatedContext;
 import android.util.Log;
 
 public class FeedSource {
@@ -19,6 +15,7 @@ public class FeedSource {
 	private String image_url;
 		
 	private ArrayList<FeedItem> itens = new ArrayList<FeedItem>();
+	private Integer totalUnread = 0;
 	
 	public FeedSource () 
 	{}
@@ -41,6 +38,11 @@ public class FeedSource {
 		this.feed_link = feed_link;
 		
 		this.loadSource();
+	}
+	
+	public void clearList()
+	{
+		this.itens.clear();
 	}
 	
 	public Long getId_feed_source()
@@ -128,6 +130,18 @@ public class FeedSource {
 			Log.d(">", "Problemas ao buscar itens");
 		}
 		
+		this.totalUnread = m.getTotalUnead(this);
+		
+	}
+	
+	public Integer setTotalUnread (Integer total)
+	{
+		return this.totalUnread = total;
+	}
+	
+	public Integer getTotalUnread ()
+	{
+		return this.totalUnread;
 	}
 	
 	public boolean save(Manager m)
@@ -161,6 +175,8 @@ public class FeedSource {
 	
 	public boolean loadItens(Manager m)
 	{
+		Log.d(">","FeedSource.loadItens - atualizando");
+		
 		ArrayList<FeedItem> itens;
 		
 		itens = RSS.loadItens(this);
@@ -183,7 +199,18 @@ public class FeedSource {
 	
 	public boolean delete(Manager m)
 	{
-		return m.delete(this);
+		Boolean retorno = m.delete(this);
+		
+		if (retorno) {
+			this.itens.clear();
+		}
+		
+		return retorno; 
+	}
+	
+	public static ArrayList<FeedItem> getAllItens (Manager m)
+	{
+		return m.getAllItens();
 	}
 	
 	

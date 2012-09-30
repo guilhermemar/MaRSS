@@ -9,12 +9,9 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -67,10 +64,7 @@ public class MaRSS extends Activity {
         
         if (sources.size() == 0) {
         	AndroidTools.toast(getApplicationContext(), "Nenhum Feed Cadastrado", Toast.LENGTH_SHORT);
-        	startActivity(new Intent(getApplicationContext(), MaRSSNewSource.class));
-        }
-        else {
-        	AndroidTools.toast(getApplicationContext(), "Existem feeds");
+        	startActivityForResult(new Intent(getApplicationContext(), MaRSSNewSource.class), 101);
         }
         
         /*
@@ -83,21 +77,51 @@ public class MaRSS extends Activity {
     
     private void atualizarSources ()
     {
+    	this.atualizarSources(false);
+    }
+    private void atualizarSources (Boolean load)
+    {
     	Manager m = new Manager(getApplicationContext());
     	ArrayList<FeedSource> sources = m.getSources();
+    	
+    	Log.d(">", "encontrado " + Integer.toString(sources.size()) + " feed(s)");
+    	
+    	/*
+    	 * verificando se não foi excluido todos itens
+    	 */
+    	if (sources.size() == 0) {
+    		AndroidTools.toast(getApplicationContext(), "Nenhum Feed Cadastrado", Toast.LENGTH_SHORT);
+        	startActivityForResult(new Intent(getApplicationContext(), MaRSSNewSource.class), 101);
+    	}
+    	
+    	if (load) {
+    		/*
+    		 * testando conexão com a internet
+    		 */
+    		if (AndroidTools.testConnection(getApplicationContext())) {
+    			AndroidTools.toast(getApplicationContext(), "Iniciada atualização de Feeds", Toast.LENGTH_SHORT);
+    			
+        		for (int i=0; i < sources.size(); ++i) {
+        			Log.d(">", "Atualizando feed " + sources.get(i).getTitle());
+        			sources.get(i).loadItens(m);
+        		}
+        		
+        		AndroidTools.toast(getApplicationContext(), "Finalizada atualização de Feeds", Toast.LENGTH_SHORT);
+    		}
+    		else {
+    			AndroidTools.toast(getApplicationContext(), "Sem conexão com a internet!");
+    		}
+    		
+    	}
     	
     	this.atualizarListaSources(sources);
     	
     }
     
     private void atualizarListaSources (ArrayList<FeedSource> sources) {
-    	ListView                  listSources  = (ListView) findViewById(R.id.listViewListSources);
+    	ListView                listSources  = (ListView) findViewById(R.id.listViewListSources);
     	ArrayAdapterSourcesList adapter      = (ArrayAdapterSourcesList) listSources.getAdapter();
     	Integer total = sources.size();
-    	
-    	if (total == 0) {
-    		AndroidTools.toast(getApplicationContext(), "Nenhum novo feed");
-    	}
     	
     	/*
     	 * limpando atual
@@ -118,6 +142,8 @@ public class MaRSS extends Activity {
         
         menu.add(Menu.NONE, Menu.FIRST + 1, Menu.NONE, "Novo");
         menu.add(Menu.NONE, Menu.FIRST + 2, Menu.NONE, "Atualizar");
+        menu.add(Menu.NONE, Menu.FIRST + 3, Menu.NONE, "Ver todos");
+        menu.add(Menu.NONE, Menu.FIRST + 4, Menu.NONE, "Sobre");
         
         return super.onCreateOptionsMenu(menu);
     }
@@ -128,20 +154,33 @@ public class MaRSS extends Activity {
     	
     	switch (item.getItemId()) {
     	case (Menu.FIRST + 1):
-    		startActivity(new Intent(getApplicationContext(), MaRSSNewSource.class));
+    		startActivityForResult(new Intent(getApplicationContext(), MaRSSNewSource.class), 101);
     		break;
     		
     	case (Menu.FIRST + 2) :
-    		this.atualizarSources();
+    		this.atualizarSources(true);
     		break;
-    	}
+    	
+	    case (Menu.FIRST + 3) :
+	    	MaRSSParameters.selectedSource = null;
+	    	startActivityForResult(new Intent(getApplicationContext(), MaRSSListSourceItens.class), 100);
+			break;
+		
+	    case (Menu.FIRST + 4) :
+	    	startActivity(new Intent(getApplicationContext(), MaRSSSobre.class));
+			break;
+		}
     	
     	return super.onOptionsItemSelected(item);
     }
     
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == 100) {
-			this.atualizarSources();
-		}
+    	
+    	switch (requestCode) {
+    	case 100 :
+    	case 101 :
+    		this.atualizarSources();
+    		break;
+    	}
 	}
 }

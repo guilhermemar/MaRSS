@@ -3,13 +3,14 @@ package net.marss;
 import java.util.ArrayList;
 
 import net.marss.arrayadapter.ArrayAdapterItensList;
-import net.marss.arrayadapter.ArrayAdapterSourcesList;
 import net.marss.database.Manager;
 import net.marss.rss.FeedItem;
 import net.marss.rss.FeedSource;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.util.Log;
@@ -18,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.TextView;
 
@@ -29,20 +31,12 @@ public class MaRSSListSourceItens extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.marss_list_source_itens);
-        /*
-         * verificando se foi a informação
-         */
-        if (!(MaRSSParameters.selectedSource instanceof FeedSource)) {
-        	/*
-        	 * buscar de todas as fontes
-        	 */
-        	AndroidTools.toast(getApplicationContext(), "Problemas ao carregar Feed");
-        	finish();
-        }
+        
         /*
          * Pegando elementos necessários do leiaute
          */
         ListView listItens = (ListView) findViewById(R.id.listViewListSourceItens);
+        TextView sourceName = (TextView) findViewById(R.id.textViewSourceName);
         /*
          * adicionando adapter ao listview
          */
@@ -70,9 +64,15 @@ public class MaRSSListSourceItens extends Activity {
 		});
         
         FeedSource source = MaRSSParameters.selectedSource;
-        ArrayList<FeedItem> itens = source.getItens(new Manager(getApplicationContext()));
+        ArrayList<FeedItem> itens;
         
-        AndroidTools.toast(getApplicationContext(), Integer.toString(itens.size()));
+        if (source == null) {
+        	itens = FeedSource.getAllItens(new Manager(getApplicationContext()));
+        	sourceName.setText("Todos Feeds");
+        } else {
+        	sourceName.setText(source.getTitle());
+        	itens = source.getItens(new Manager(getApplicationContext()));
+        }
         
         for (int i=0; i<itens.size(); ++i) {
         	itensList.add(itens.get(i));
@@ -82,29 +82,76 @@ public class MaRSSListSourceItens extends Activity {
     
     private void atualizar ()
     {
-    	Manager m = new Manager(getApplicationContext());
+    	if (AndroidTools.testConnection(getApplicationContext())) {
+    		
+    		Manager m = new Manager(getApplicationContext());
+    		
+	    	AndroidTools.toast(getApplicationContext(), "Iniciada atualização de Feeds", Toast.LENGTH_SHORT);
+	    	FeedSource source = MaRSSParameters.selectedSource;
+	    	
+	    	if (source == null) {
+	    		ArrayList<FeedSource> sources = m.getSources();
+	    		for (int i=0; sources.size()<i; ++i) {
+	    			sources.get(i).loadItens(m);
+	    		}
+	    		
+	    	} else {
+	    		source.loadItens(m);
+	    	}
+	    	
+	    	AndroidTools.toast(getApplicationContext(), "Finalizada atualização de Feeds", Toast.LENGTH_SHORT);
+	    	this.atualizarLista();
+    	}
+		else {
+			AndroidTools.toast(getApplicationContext(), "Sem conexão com a internet!");
+		}
     	
+    }
+    
+    private void atualizarLista () 
+    {
+    	Manager m = new Manager(getApplicationContext());
     	FeedSource source = MaRSSParameters.selectedSource;
-    	source.loadItens(m);
+    	
+    	ArrayList<FeedItem> itens;
+    	if (source == null) {
+    		itens = FeedSource.getAllItens(m);
+    	} else {
+    		source.clearList();
+    		itens = source.getItens(m);
+    	}
+    	
     	
     	ListView listItens = (ListView) findViewById(R.id.listViewListSourceItens);
     	ArrayAdapterItensList itensList =  (ArrayAdapterItensList) listItens.getAdapter();
     	
-        ArrayList<FeedItem> itens = source.getItens(m);
-        
         itensList.clear();
         
         for (int i=0; i<itens.size(); ++i) {
         	itensList.add(itens.get(i));
         }
-    	
     }
+    
     
     private void excluirFonte ()
     {
-    	MaRSSParameters.selectedSource.delete(new Manager(getApplicationContext()));
-    	MaRSSParameters.selectedSource = null;
-    	finish();
+    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+	    builder.setMessage("Deseja mesmo ecluir esta fonte?")
+	           .setCancelable(false)
+	           .setPositiveButton("Sim", new DialogInterface.OnClickListener() {
+	               public void onClick(DialogInterface dialog, int id)
+	               {
+	            	   MaRSSParameters.selectedSource.delete(new Manager(getApplicationContext()));
+	            	   MaRSSParameters.selectedSource = null;
+	            	   finish();
+	               }
+	           })
+	           .setNegativeButton("Não", new DialogInterface.OnClickListener() {
+	               public void onClick(DialogInterface dialog, int id)
+	               {}
+	           });
+	    AlertDialog alert = builder.create();
+	    alert.show();	
     }
     
     /*
@@ -116,7 +163,10 @@ public class MaRSSListSourceItens extends Activity {
     	this.menu = menu;
         
         menu.add(Menu.NONE, Menu.FIRST + 1, Menu.NONE, "Atualizar");
-        menu.add(Menu.NONE, Menu.FIRST + 2, Menu.NONE, "Excluir Fonte");
+        
+        if (MaRSSParameters.selectedSource != null) {
+        	menu.add(Menu.NONE, Menu.FIRST + 2, Menu.NONE, "Excluir Fonte");
+        }
         
         /*
          * verificando se está ativo ocultar lidas
@@ -127,6 +177,8 @@ public class MaRSSListSourceItens extends Activity {
         else {
         	menu.add(Menu.NONE, Menu.FIRST + 3, Menu.NONE, "Ocultar Lidas");
         }
+        
+        menu.add(Menu.NONE, Menu.FIRST + 4, Menu.NONE, "Sobre");
         
         return super.onCreateOptionsMenu(menu);
     }
@@ -161,8 +213,12 @@ public class MaRSSListSourceItens extends Activity {
 	        /*
 	         * atualizando
 	         */
-	        this.atualizar();
+	        this.atualizarLista();
 	        
+			break;
+	
+	    case (Menu.FIRST + 4) :
+	    	startActivity(new Intent(getApplicationContext(), MaRSSSobre.class));
 			break;
 		}
     	

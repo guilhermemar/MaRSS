@@ -1,7 +1,5 @@
 package net.marss;
 
-import javax.xml.transform.Source;
-
 import net.marss.rss.FeedSource;
 
 public class MaRSSParameters
