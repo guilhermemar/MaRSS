@@ -21,7 +21,7 @@
     </TableRow>
 
     <ListView
-        android:id="@+id/listViewListSources"
+        android:id="@+id/listViewListSourceItens"
         android:layout_width="match_parent"
         android:layout_height="304dp"
         android:layout_weight="0.92" >

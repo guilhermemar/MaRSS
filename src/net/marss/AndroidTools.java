@@ -6,7 +6,7 @@ import android.widget.Toast;
 public class AndroidTools {
 	public static void toast(Context context, CharSequence text)
 	{
-		AndroidTools.toast(context, text, Toast.LENGTH_LONG);
+		AndroidTools.toast(context, text, Toast.LENGTH_SHORT);
 	}
 	
 	public static void toast(Context context, CharSequence text, int duration)

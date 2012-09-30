@@ -2,6 +2,7 @@ package net.marss.database;
 
 import java.util.ArrayList;
 
+import net.marss.MaRSSParameters;
 import net.marss.rss.FeedItem;
 import net.marss.rss.FeedSource;
 import android.content.ContentValues;
@@ -69,6 +70,7 @@ public class Manager extends SQLiteOpenHelper {
 		SQLiteDatabase db = getWritableDatabase();
 		
 		ContentValues values = new ContentValues();
+		values.put("feed_link", source.getFeed_link());
 		values.put("title", source.getTitle());
 		values.put("link", source.getLink());
 		values.put("description", source.getDescription());
@@ -78,6 +80,9 @@ public class Manager extends SQLiteOpenHelper {
 			retorno = db.insertOrThrow("FEED_SOURCES", null, values);
 		}
 		catch(SQLiteConstraintException ex){
+			
+			Log.d(">", "Erro ao salvar no banco de dados : " + ex.getMessage());
+			
 			throw new ManagerException(
 				ManagerException.SOURCE_ALREADY_REGISTERED,
 				ManagerException.SOURCE_ALREADY_REGISTERED_MESSAGE	
@@ -115,8 +120,31 @@ public class Manager extends SQLiteOpenHelper {
 		return true;
 	}
 	
+	public boolean delete (FeedSource source) 
+	{
+		/*
+		 * buscando itens para apagar eles
+		 */
+		ArrayList<FeedItem> itens = source.getItens(this); 
+		
+		for (int i=0; i<itens.size(); ++i) {
+			itens.get(i).delete(this);
+		}
+		
+		/*
+		 * deletando source
+		 */
+		SQLiteDatabase db = getWritableDatabase();
+		String where = "id_feed_source = " + source.getId_feed_source();
+		
+		db.delete("FEED_SOURCES", where, null);
+		
+		return true;
+	}
+	
 	public boolean insert(FeedItem item) throws ManagerException
 	{
+		Log.d(">", "salvando item " + item.getTitle());
 		Long retorno = -1l;
 		
 		SQLiteDatabase db = getWritableDatabase();
@@ -133,6 +161,8 @@ public class Manager extends SQLiteOpenHelper {
 			retorno = db.insertOrThrow("FEED_ITENS", null, values);
 		}
 		catch(SQLiteConstraintException ex){
+			Log.d(">", "Item já existente");
+			
 			throw new ManagerException(
 				ManagerException.SOURCE_ALREADY_REGISTERED,
 				ManagerException.SOURCE_ALREADY_REGISTERED_MESSAGE	
@@ -141,6 +171,7 @@ public class Manager extends SQLiteOpenHelper {
 		
 		if (retorno > 0) {
 			item.setId_feed_item(retorno);
+			Log.d(">", "Item salvo");
 			return true;
 		} 
 		
@@ -172,9 +203,20 @@ public class Manager extends SQLiteOpenHelper {
 		return true;
 	}
 	
+	public boolean delete (FeedItem item)
+	{
+		SQLiteDatabase db = getWritableDatabase();
+		
+		String where = "id_feed_item = " + item.getId_feed_item();
+		
+		db.delete("FEED_ITENS", where, null);
+		
+		return true;
+	}
+	
 	public ArrayList<FeedSource> getSources()
 	{
-		Log.d(">", "óóó, chegamos aqui");
+		Log.d(">", "iniciando busca por feed");
 		
 		ArrayList<FeedSource> sources = new ArrayList<FeedSource>();
 		
@@ -192,6 +234,8 @@ public class Manager extends SQLiteOpenHelper {
 			null
 		);
 		
+		Log.d(">", "encontrou " + Integer.toString(c.getCount()) + " iten(s)");
+		
 		/*
 		 * Percorrendo itens
 		 */
@@ -206,7 +250,79 @@ public class Manager extends SQLiteOpenHelper {
 			));
 		}
 
-		Log.d(">", "óóó, chegamos aqui também");
+		Log.d(">", "retornando feeds encontrados");
 		return sources;
+	}
+	
+	public ArrayList<FeedItem> getItens(FeedSource source)
+	{
+		Log.d(">", "iniciando busca por itens do feed " + source.getTitle());
+		
+		ArrayList<FeedItem> itens = new ArrayList<FeedItem>();
+		
+		SQLiteDatabase db = getReadableDatabase();
+		
+		Cursor c;
+		if (MaRSSParameters.hiddenReadeds) {
+			Log.d(">", "Buscar somente não lidos");
+			
+			
+			 c = db.rawQuery("" +
+				"SELECT " +
+				"	id_feed_item, " +
+				"	id_feed_source, " +
+				"	title, " +
+				"	link, " +
+				"	description, " +
+				"	pub_date, " +
+				"	control_read " +
+				"FROM " +
+				"	feed_itens " +
+				"WHERE " +
+				"	id_feed_source = " + source.getId_feed_source() + " " +
+				"	AND control_read = 0 ",
+				null
+			);
+		
+		}
+		else {
+			Log.d(">", "Buscar somente todos");
+			
+			c = db.rawQuery("" +
+					"SELECT " +
+					"	id_feed_item, " +
+					"	id_feed_source, " +
+					"	title, " +
+					"	link, " +
+					"	description, " +
+					"	pub_date, " +
+					"	control_read " +
+					"FROM " +
+					"	feed_itens " +
+					"WHERE " +
+					"	id_feed_source = " + source.getId_feed_source() + " ",
+					null
+				);
+		}
+		
+
+
+		Log.d(">", "encontrou " + Integer.toString(c.getCount()) + " iten(s)");
+		
+		while (c.moveToNext()) {
+			itens.add(new FeedItem(
+				c.getLong(0),
+				c.getLong(1),
+				c.getString(2),
+				c.getString(3),
+				c.getString(4),
+				c.getString(5),
+				c.getInt(6)
+			));
+		}
+
+		Log.d(">", "retornando feeds encontrados");
+		return itens;
+
 	}
 }

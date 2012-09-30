@@ -2,6 +2,7 @@ package net.marss.rss;
 
 import java.util.ArrayList;
 
+import net.marss.AndroidTools;
 import net.marss.database.Manager;
 import net.marss.database.ManagerException;
 import android.R.bool;
@@ -16,8 +17,8 @@ public class FeedSource {
 	private String link;
 	private String description;
 	private String image_url;
-	
-	private ArrayList<FeedItem> itens = null;
+		
+	private ArrayList<FeedItem> itens = new ArrayList<FeedItem>();
 	
 	public FeedSource () 
 	{}
@@ -100,8 +101,33 @@ public class FeedSource {
 		this.feed_link = feed_link;
 	}
 
-	public ArrayList<FeedItem> getItens() {
+	public ArrayList<FeedItem> getItens(Manager m) {
+		
+		if (this.itens.size() == 0) {
+			Log.d(">","itens está nulo, buscando itens");
+			this.getItensDatabase(m);
+			//this.loadItens(m);
+		}
 		return itens;
+	}
+	
+	private void getItensDatabase(Manager m)
+	{
+		Log.d(">", "chamando metodo de busca no banco");
+		ArrayList<FeedItem> itens = new ArrayList<FeedItem>();
+		
+		try {
+			itens = m.getItens(this);
+			
+			for (int i=0; i<itens.size(); ++i) {
+				this.itens.add(itens.get(i));
+			}
+			
+		}
+		catch (Exception ex) {
+			Log.d(">", "Problemas ao buscar itens");
+		}
+		
 	}
 	
 	public boolean save(Manager m)
@@ -115,6 +141,7 @@ public class FeedSource {
 		}
 		catch(ManagerException ex) {
 			//TODO inserir mensagem de erro ao cadastrar
+			Log.d(">", "ocorreu uma exeção : " + ex.getMessage());
 		}
 		
 		return false;
@@ -125,24 +152,38 @@ public class FeedSource {
 		return RSS.loadSource(this);
 	}
 	
+	public boolean loadSource(String feed_link)
+	{
+		this.feed_link = feed_link;
+		
+		return this.loadSource();
+	}
+	
 	public boolean loadItens(Manager m)
 	{
-		ArrayList<FeedItem> itens = new ArrayList<FeedItem>();
+		ArrayList<FeedItem> itens;
 		
 		itens = RSS.loadItens(this);
-		
-		for (int i= 0; i < itens.size(); ++i) {
-			try{
-				//itens.get(i).save(m);
-				Log.d(">", "################################");
-				Log.d(">", itens.get(i).getTitle());
-				Log.d(">", itens.get(i).getLink());
-				Log.d(">", "################################");
+		/*
+		 * salvando
+		 */
+		for (int i=0; i<itens.size(); ++i) {
+			try {
+				//Log.d(">", "salvando item : " + itens.get(i).getTitle());
+				itens.get(i).save(m);
 			}
-			catch (Exception ex){}
+			catch(Exception e)
+			{}
 		}
 		
+		this.itens.clear();
+		
 		return true;
+	}
+	
+	public boolean delete(Manager m)
+	{
+		return m.delete(this);
 	}
 	
 	

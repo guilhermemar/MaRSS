@@ -3,6 +3,57 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-   
+    <TableRow
+        android:id="@+id/tableRow1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <ImageView
+                android:id="@+id/imageView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/rss_feed" />
+        </LinearLayout>
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/tableRow2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <EditText
+                android:id="@+id/textSourceUrl"
+                android:layout_width="240dp"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/buttonSourceAdd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Adicionar" />
+    </TableRow>
+
+    <ListView
+        android:id="@+id/listViewSourceAdded"
+        android:layout_width="match_parent"
+        android:layout_height="304dp"
+        android:layout_weight="0.92" >
+    </ListView>
+
+    <Button
+        android:id="@+id/buttonSaveSources"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:text="Salvar" />
 
 </TableLayout>

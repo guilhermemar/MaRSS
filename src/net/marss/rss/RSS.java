@@ -22,13 +22,19 @@ public class RSS {
 	{
 		Log.d(">", "Carregando feed");
 		
-		Element properties = RSS.getSource(source.getFeed_link());
-		Element properties_image = (Element) properties.getElementsByTagName("image").item(0);
-		
-		source.setTitle(properties.getElementsByTagName("title").item(0).getTextContent());
-		source.setLink(properties.getElementsByTagName("link").item(0).getTextContent());
-		source.setDescription(properties.getElementsByTagName("description").item(0).getTextContent());
-		source.setImage_url(properties_image.getElementsByTagName("link").item(0).getTextContent());
+		try {
+			Element properties = RSS.getSource(source.getFeed_link());
+			Element properties_image = (Element) properties.getElementsByTagName("image").item(0);
+			
+			source.setTitle(properties.getElementsByTagName("title").item(0).getTextContent());
+			source.setLink(properties.getElementsByTagName("link").item(0).getTextContent());
+			source.setDescription(properties.getElementsByTagName("description").item(0).getTextContent());
+			source.setImage_url(properties_image.getElementsByTagName("link").item(0).getTextContent());
+			
+		}
+		catch(Exception e) {
+			return false;
+		}
 		
 		return true;
 	}
@@ -47,7 +53,7 @@ public class RSS {
 			for (int i = 1; i < rssItens.getLength(); i++) {
 				
 				Element e = (Element) rssItens.item(i);
-				
+				/*
 				Log.d(">", "################################");
 				Log.d(">", "Item " + i);
 				Log.d(">", " TITLE ++> " + e.getElementsByTagName("title").item(0).getTextContent());
@@ -55,7 +61,7 @@ public class RSS {
 				Log.d(">", " DESCRIPTION ++> " + e.getElementsByTagName("description").item(0).getTextContent());
 				Log.d(">", " PUB_DATA ++> " + e.getElementsByTagName("pubDate").item(0).getTextContent());
 				Log.d(">", "################################");
-				/*
+				*/
 				itens.add(new FeedItem(
 					source.getId_feed_source(),
 					e.getElementsByTagName("title").item(0).getTextContent(),
@@ -64,7 +70,7 @@ public class RSS {
 					e.getElementsByTagName("pubDate").item(0).getTextContent(),
 					0
 				));
-				*/
+				
 			}
 		}
 		

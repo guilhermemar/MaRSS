@@ -92,4 +92,8 @@ public class FeedItem {
 		return false;
 	}
 	
+	public boolean delete(Manager m)
+	{
+		return m.delete(this);
+	}
 }

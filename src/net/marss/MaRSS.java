@@ -2,12 +2,23 @@ package net.marss;
 
 import java.util.ArrayList;
 
+import net.marss.arrayadapter.ArrayAdapterSourcesList;
 import net.marss.database.Manager;
 import net.marss.rss.FeedSource;
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Intent;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.Toast;
+import android.widget.AdapterView.OnItemClickListener;
 
 public class MaRSS extends Activity {
 
@@ -15,7 +26,32 @@ public class MaRSS extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.marss_main);
-        
+        /*
+         * Pegando elementos necessários do leiaute
+         */
+        ListView listSources = (ListView) findViewById(R.id.listViewListSources);
+        /*
+         * adicionando adapter ao listview
+         */
+        listSources.setAdapter(
+        	new ArrayAdapterSourcesList(
+        		getApplicationContext(),
+        		android.R.layout.simple_list_item_1
+        	)
+        );
+        /*
+    	 * adicionando acao
+    	 */
+    	listSources.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> listSources, View arg1, int index, long arg3)
+			{								
+				FeedSource source = (FeedSource) listSources.getAdapter().getItem(index);
+				
+				MaRSSParameters.selectedSource = source;
+
+				startActivityForResult(new Intent(getApplicationContext(), MaRSSListSourceItens.class), 100);
+			}
+		});
         /*
          * iniciando bando de dados
          */
@@ -30,39 +66,82 @@ public class MaRSS extends Activity {
         sources = m.getSources();
         
         if (sources.size() == 0) {
-        	AndroidTools.toast(getApplicationContext(), "Nenhum Feed Cadastrado");
+        	AndroidTools.toast(getApplicationContext(), "Nenhum Feed Cadastrado", Toast.LENGTH_SHORT);
+        	startActivity(new Intent(getApplicationContext(), MaRSSNewSource.class));
         }
-        /*try {
-	        
-	        
-	         * cadastrando um feed para teste
-	         
-	        FeedSource source = new FeedSource("http://www.inovacaotecnologica.com.br/boletim/rss.xml");
-	        
-	        Log.d(">", source.getFeed_link());
-	        Log.d(">", source.getTitle());
-	        Log.d(">", source.getLink());
-	        Log.d(">", source.getDescription());
-	        Log.d(">", source.getImage_url());
-	        
-	        //source.save(m);
-	        //Log.d(">", source.getId_feed_source().toString());
-	        
-	        
-	       source.loadItens(m);
-	        
-	        
+        else {
+        	AndroidTools.toast(getApplicationContext(), "Existem feeds");
         }
-        catch(Exception ex) {
-        	Log.d(">", "Fuuuu -> " + ex.getMessage());
-        }*/
+        
+        /*
+         * exibindo lista de feeds
+         */
+        this.atualizarListaSources(sources);
         
         Log.d(">", "Encerrado método onCreate");        
     }
+    
+    private void atualizarSources ()
+    {
+    	Manager m = new Manager(getApplicationContext());
+    	ArrayList<FeedSource> sources = m.getSources();
+    	
+    	this.atualizarListaSources(sources);
+    	
+    }
+    
+    private void atualizarListaSources (ArrayList<FeedSource> sources) {
+    	ListView                  listSources  = (ListView) findViewById(R.id.listViewListSources);
+    	ArrayAdapterSourcesList adapter      = (ArrayAdapterSourcesList) listSources.getAdapter();
+    	Integer total = sources.size();
+    	
+    	if (total == 0) {
+    		AndroidTools.toast(getApplicationContext(), "Nenhum novo feed");
+    	}
+    	
+    	/*
+    	 * limpando atual
+    	 */
+    	adapter.clear();
+    	
+    	for (int i=0; i<total; ++i) {
+    		adapter.add(sources.get(i));
+    	}
+    }
 
+    /*
+     * OPTIONS
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_main, menu);
-        return true;
+        //getMenuInflater().inflate(R.menu.activity_main, menu);
+        
+        menu.add(Menu.NONE, Menu.FIRST + 1, Menu.NONE, "Novo");
+        menu.add(Menu.NONE, Menu.FIRST + 2, Menu.NONE, "Atualizar");
+        
+        return super.onCreateOptionsMenu(menu);
     }
+    
+    public boolean onOptionsItemSelected(MenuItem item)
+    {    	
+    	Log.d(">", "Clicado no menu" + String.valueOf(item.getItemId()));
+    	
+    	switch (item.getItemId()) {
+    	case (Menu.FIRST + 1):
+    		startActivity(new Intent(getApplicationContext(), MaRSSNewSource.class));
+    		break;
+    		
+    	case (Menu.FIRST + 2) :
+    		this.atualizarSources();
+    		break;
+    	}
+    	
+    	return super.onOptionsItemSelected(item);
+    }
+    
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == 100) {
+			this.atualizarSources();
+		}
+	}
 }

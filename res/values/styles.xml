@@ -1,5 +1,7 @@
 <resources>
 
     <style name="AppTheme" parent="android:Theme.Light" />
+    <color name="default_text_color">#000000</color>
+    <color name="readed_text_color">#f0f0f0</color>
 
 </resources>
