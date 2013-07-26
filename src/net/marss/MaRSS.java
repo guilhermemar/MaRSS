@@ -4,9 +4,12 @@ import java.util.ArrayList;
 
 import net.marss.arrayadapter.ArrayAdapterSourcesList;
 import net.marss.database.Manager;
+import net.marss.rss.AsyncRequest;
+import net.marss.rss.AsyncRequestMethods;
 import net.marss.rss.FeedSource;
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.view.Menu;
@@ -17,7 +20,8 @@ import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class MaRSS extends Activity {
+public class MaRSS extends Activity implements AsyncRequestMethods
+{
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -98,6 +102,15 @@ public class MaRSS extends Activity {
     		/*
     		 * testando conexão com a internet
     		 */
+    		
+    		AsyncRequest ar = new AsyncRequest(this);
+    		ar.execute();
+    		
+    		Log.d(">", "Heeeeeeeeeeeeeey, sexy lady");
+    		
+    		return;
+    		
+    		/*
     		if (AndroidTools.testConnection(getApplicationContext())) {
     			AndroidTools.toast(getApplicationContext(), "Iniciada atualização de Feeds", Toast.LENGTH_SHORT);
     			
@@ -111,7 +124,7 @@ public class MaRSS extends Activity {
     		else {
     			AndroidTools.toast(getApplicationContext(), "Sem conexão com a internet!");
     		}
-    		
+    		*/
     	}
     	
     	this.atualizarListaSources(sources);
@@ -182,5 +195,36 @@ public class MaRSS extends Activity {
     		this.atualizarSources();
     		break;
     	}
+	}
+
+	public void AsyncRequestExecute() {
+		Log.d(">", "OI OI OI, OI OI OI! Impressão de algo");
+		
+		if (AndroidTools.testConnection(getApplicationContext())) {
+			
+			Log.d(">", "As mãos para cima, cintura solta");
+			
+			//AndroidTools.toast(getApplicationContext(), "Iniciada atualização de Feeds", Toast.LENGTH_SHORT);
+			
+			Manager m = new Manager(getApplicationContext());
+	    	ArrayList<FeedSource> sources = m.getSources();
+			
+    		for (int i=0; i < sources.size(); ++i) {
+    			Log.d(">", "Atualizando feed " + sources.get(i).getTitle());
+    			//sources.get(i).loadItens(m);
+    		}
+    		
+    		//AndroidTools.toast(getApplicationContext(), "Finalizada atualização de Feeds", Toast.LENGTH_SHORT);
+		}
+		else {
+			AndroidTools.toast(getApplicationContext(), "Sem conexão com a internet!");
+		}
+		
+	}
+
+	public void onPostExecute() {
+		// TODO Auto-generated method stub
+		AndroidTools.toast(getApplicationContext(), "Finalizada atualização de Feeds", Toast.LENGTH_SHORT);
+		Log.d(">", "GangmanStyle");
 	}
 }

@@ -151,11 +151,11 @@ public class MaRSSNewSource extends Activity {
     	s.add("http://www.inovacaotecnologica.com.br/boletim/rss.xml"); 
     	s.add("http://rss.terra.com.br/0,,EI1,00.xml");
     	s.add("http://rss.terra.com.br/0,,EI4795,00.xml");
-    	s.add("http://carroonline.terra.com.br/rss.asp"); 
+    	//s.add("http://carroonline.terra.com.br/rss.asp"); 
     	s.add("http://rss.terra.com.br/0,,EI1267,00.xml");
     	s.add("http://rss.terra.com.br/0,,EI1497,00.xml"); 
-    	s.add("http://www2.portoalegre.rs.gov.br/cs/rss.php");
-    	s.add("http://www.praquempedala.com.br/blog/feed/");
+    	//s.add("http://www2.portoalegre.rs.gov.br/cs/rss.php");
+    	//s.add("http://www.praquempedala.com.br/blog/feed/");
     	s.add("http://cerejadeneve.com/feed/");
     	s.add("http://feeds.feedburner.com/tutorial9"); 
     	
